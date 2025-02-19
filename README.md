@@ -1,7 +1,7 @@
 # fe-test-img-carousel
 
 
-## Link production
+## Production link
 https://zubchenko.site/
 
 ## Project Setup
