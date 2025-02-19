@@ -177,9 +177,8 @@ export default {
 
     img {
       width: 100%;
-      border-radius: 20px;
+      min-height: 220px;
       object-fit: contain;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: opacity 0.3s ease, transform 0.3s ease;
 
       &:hover {
