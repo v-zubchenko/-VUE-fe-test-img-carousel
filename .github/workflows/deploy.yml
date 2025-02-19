@@ -1,0 +1,57 @@
+name: Deploy Vue App with Docker
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/docker
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Build Docker image
+        run: |
+          docker build -t vue-app .
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker tag vue-app ${{ secrets.DOCKER_USERNAME }}/vue-app:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/vue-app:latest
+
+      - name: SSH into server and run container
+        run: |
+          eval "$(ssh-agent -s)"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+          ssh -o StrictHostKeyChecking=no ${{ secrets.USER_NAME_HOST }}@${{ secrets.HOST }} << EOF
+           
+            echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u "${{ secrets.USER_NAME_GIT }}" --password-stdin
+          
+            docker pull ${{ secrets.DOCKER_USERNAME }}/vue-app:latest
+
+            docker stop vue-app-container || true
+            docker rm vue-app-container || true
+
+            docker run -d --name vue-app-container -p 8080:80 ${{ secrets.DOCKER_USERNAME }}/vue-app:latest
+          EOF
+
+      - name: Log out from Docker Hub
+        run: docker logout ghcr.io
