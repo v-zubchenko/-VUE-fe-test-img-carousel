@@ -182,13 +182,12 @@ export default {
       transition: opacity 0.3s ease, transform 0.3s ease;
 
       &:hover {
-        opacity: 0.7;
+        opacity: 0.4;
       }
     }
 
     .selected {
-      opacity: 0.7;
-      outline: 2px solid black;
+      opacity: 0.4;
     }
   }
 
